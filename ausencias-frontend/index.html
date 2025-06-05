@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Registro de Ausencias</title>
+  <style>
+    #otroTipoContainer {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Formulario de Ausencia</h1>
+  <form id="ausenciaForm">
+    <label>Nombre:
+      <select name="nombre" id="nombre" required>
+        <option value="">Seleccione un nombre</option>
+      </select>
+    </label><br>
+
+    <label for="tipo">Tipo:
+      <select name="tipo" id="tipo" required>
+        <option value="">Seleccione un tipo de ausencia</option>
+        <option value="Permiso Administrativo Jornada Completa">Permiso Administrativo Jornada Completa</option>
+        <option value="Permiso Administrativo Jornada Mañana">Permiso Administrativo Jornada Mañana</option>
+        <option value="Permiso Administrativo Jornada Tarde">Permiso Administrativo Jornada Tarde</option>
+        <option value="Licencia Médica">Licencia Médica</option>
+        <option value="Convenio Colectivo Jornada Completa">Convenio Colectivo Jornada Completa</option>
+        <option value="Convenio Colectivo Jornada Mañana">Convenio Colectivo Jornada Mañana</option>
+        <option value="Convenio Colectivo Jornada Tarde">Convenio Colectivo Jornada Tarde</option>
+        <option value="Cumpleaños">Cumpleaños</option>
+        <option value="Otros">Otros</option>
+      </select>
+    </label><br>
+
+    <div id="otroTipoContainer">
+      <label>Especifique el tipo: <input type="text" id="otroTipoInput"></label><br>
+    </div>
+
+    <label>Fecha inicio: <input type="date" name="fecha_inicio" required></label><br>
+    <label>Días: <input type="number" name="dias" required></label><br>
+    <label>Email: <input type="email" name="email" required></label><br>
+    <button type="submit">Enviar</button>
+  </form>
+  <p id="respuesta"></p>
+
+  <h2>Ausencias registradas</h2>
+  <ul id="listaAusencias"></ul>
+
+  <script>
+    // Mostrar campo adicional si se selecciona "Otros"
+    document.addEventListener('DOMContentLoaded', () => {
+      const tipoSelect = document.getElementById('tipo');
+      const otroTipoContainer = document.getElementById('otroTipoContainer');
+      const otroTipoInput = document.getElementById('otroTipoInput');
+
+      tipoSelect.addEventListener('change', () => {
+        if (tipoSelect.value === 'Otros') {
+          otroTipoContainer.style.display = 'block';
+          otroTipoInput.required = true;
+        } else {
+          otroTipoContainer.style.display = 'none';
+          otroTipoInput.required = false;
+        }
+      });
+
+      // Reemplazar valor si se elige "Otros"
+      const form = document.getElementById('ausenciaForm');
+      form.addEventListener('submit', (e) => {
+        if (tipoSelect.value === 'Otros') {
+          const tipoReal = otroTipoInput.value.trim();
+          if (tipoReal !== '') {
+            tipoSelect.value = tipoReal;
+          }
+        }
+      });
+    });
+  </script>
+  <script src="script.js"></script>
+</body>
+</html>
