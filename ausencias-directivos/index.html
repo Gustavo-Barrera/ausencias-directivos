@@ -18,9 +18,8 @@
     }
     header img {
       width: 60px;
-      height: auto;
     }
-    header h1 {
+    h1 {
       font-size: 24px;
       margin: 0;
     }
@@ -61,75 +60,69 @@
   <div class="semana" id="semana1"></div>
   <div class="semana" id="semana2"></div>
 
-  <script type="module">
-    async function cargarSemana(offsetDias, contenedorId) {
-      const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
-      const hoy = new Date();
-      hoy.setDate(hoy.getDate() + offsetDias);
+  <script>
+    const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes'];
 
-      const lunes = new Date(hoy);
-      const diaActual = lunes.getDay();
-      const diasParaLunes = (1 - diaActual + 7) % 7;
-      lunes.setDate(lunes.getDate() + diasParaLunes);
+    async function cargarSemana(offsetDias, contenedorId) {
+      const hoy = new Date();
+      const lunes = new Date(hoy.setDate(hoy.getDate() - hoy.getDay() + 1 + offsetDias));
       lunes.setHours(0, 0, 0, 0);
 
-      const fechas = [];
-      for (let i = 0; i < 5; i++) {
+      const dias = Array.from({ length: 5 }, (_, i) => {
         const d = new Date(lunes);
-        d.setDate(lunes.getDate() + i);
-        fechas.push(d);
-      }
-
-      const desde = fechas[0].toISOString().split('T')[0];
-      const hasta = fechas[4].toISOString().split('T')[0];
-
-      const response = await fetch("http://localhost:3000/ausencias");
-      const data = await response.json();
-
-      const calendario = {};
-
-      fechas.forEach((fecha) => {
-        const key = fecha.toISOString().split('T')[0];
-        calendario[key] = [];
+        d.setDate(d.getDate() + i);
+        return d;
       });
 
-      data.forEach((ausencia) => {
-        const inicio = new Date(ausencia.fecha_inicio);
-        for (let i = 0; i < ausencia.dias; i++) {
-          const actual = new Date(inicio);
-          actual.setDate(inicio.getDate() + i);
-          const actualStr = actual.toISOString().split('T')[0];
-          if (actualStr in calendario) {
-            calendario[actualStr].push(ausencia);
+      const desde = dias[0].toISOString().slice(0, 10);
+      const hasta = dias[4].toISOString().slice(0, 10);
+
+      const res = await fetch("http://localhost:3000/ausencias");
+      const data = await res.json();
+
+      // Expandir ausencias según duración
+      const calendario = {};
+      dias.forEach(fecha => {
+        const fechaStr = fecha.toISOString().slice(0, 10);
+        calendario[fechaStr] = [];
+      });
+
+      data.forEach(a => {
+        const inicio = new Date(a.fecha_inicio);
+        for (let i = 0; i < a.dias; i++) {
+          const fecha = new Date(inicio);
+          fecha.setDate(fecha.getDate() + i);
+          const fechaStr = fecha.toISOString().slice(0, 10);
+          if (calendario[fechaStr]) {
+            calendario[fechaStr].push(a);
           }
         }
       });
 
       const contenedor = document.getElementById(contenedorId);
-      contenedor.innerHTML = '';
+      contenedor.innerHTML = "";
 
-      fechas.forEach((fecha, i) => {
-        const fechaStr = fecha.toISOString().split('T')[0];
+      dias.forEach((fecha, i) => {
+        const fechaStr = fecha.toISOString().slice(0, 10);
+        const col = document.createElement("div");
+        col.className = "dia";
+        col.innerHTML = `<h2>${diasSemana[i]}<br><small>${fechaStr}</small></h2>`;
+
         const ausentes = calendario[fechaStr];
-
-        const div = document.createElement('div');
-        div.className = 'dia';
-        div.innerHTML = `<h2>${diasSemana[i]}<br><small>${fechaStr}</small></h2>`;
-
-        if (!ausentes || ausentes.length === 0) {
-          div.innerHTML += '<p>Sin ausencias</p>';
+        if (ausentes.length === 0) {
+          col.innerHTML += "<p>Sin ausencias</p>";
         } else {
           ausentes.forEach(a => {
-            div.innerHTML += `<div class="ausente"><strong>${a.nombre}</strong><br><span class="tipo">${a.tipo}</span></div>`;
+            col.innerHTML += `<div class="ausente"><strong>${a.nombre}</strong><br><span class="tipo">${a.tipo}</span></div>`;
           });
         }
 
-        contenedor.appendChild(div);
+        contenedor.appendChild(col);
       });
     }
 
-    cargarSemana(0, 'semana1');
-    cargarSemana(7, 'semana2');
+    cargarSemana(0, 'semana1');   // semana actual
+    cargarSemana(7, 'semana2');   // semana siguiente
   </script>
 </body>
 </html>
